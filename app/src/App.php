@@ -168,7 +168,8 @@ class App
     }
 
     // ユーザーエージェントからデバイスタイプを取得
-    $ua = $_SERVER['HTTP_USER_AGENT'];
+    // MEMO: Cron実行時にもここを通過するので、定義がない際には空文字を設定
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? "";
 
     $devices = array('iPhone', 'iPod', 'Android');
     foreach ($devices as $device) {

@@ -25,7 +25,8 @@ class Request
 
   private function __construct()
   {
-    $request_uri = $_SERVER['REQUEST_URI'];
+    // MEMO: Cronなど、REQUEST_URIが発生しないパスがあるため
+    $request_uri = $_SERVER['REQUEST_URI'] ?? "";
     $urls = parse_url($request_uri);
     $this->path = $urls['path'];
     if (isset($urls['query'])) {
