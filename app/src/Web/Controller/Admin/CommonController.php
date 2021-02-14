@@ -185,7 +185,7 @@ class CommonController extends AdminController
 
         // ディレクトリ製作成功チェック
         if (!file_exists(Config::get('TEMP_DIR') . 'log') || !file_exists(Config::get('TEMP_DIR') . 'blog_template')) {
-          $this->setErrorMessage(__('Create /app/temp/blog_template and log directory failed.'));
+          $this->setErrorMessage($request, __('Create /app/temp/blog_template and log directory failed.'));
           $this->redirect($request, $request->baseDirectory . 'common/install?state=0&error=mkdir');
         }
 
@@ -205,7 +205,7 @@ class CommonController extends AdminController
             // 作成できたか確認
             $msdb->connect();
           } catch (Exception $e) {
-            $this->setErrorMessage(__('Execute `Create database` failed. Please `Create database` your self.'));
+            $this->setErrorMessage($request, __('Execute `Create database` failed. Please `Create database` your self.'));
             $this->redirect($request, $request->baseDirectory . 'common/install?state=0&error=db_create');
           }
         }
@@ -228,7 +228,7 @@ class CommonController extends AdminController
         $res = MSDB::getInstance()->multiExecute($sql);
         if ($res === false) {
           /** @noinspection SyntaxError */
-          $this->setErrorMessage(__('Create table failed.'));
+          $this->setErrorMessage($request, __('Create table failed.'));
           $this->redirect($request, $request->baseDirectory . 'common/install?state=0&error=table_insert');
         }
 
@@ -237,7 +237,7 @@ class CommonController extends AdminController
         $table = MSDB::getInstance()->find($sql);
         if (!is_countable($table)) {
           /** @noinspection SyntaxError */
-          $this->setErrorMessage(__('Create table failed.'));
+          $this->setErrorMessage($request, __('Create table failed.'));
           $this->redirect($request, $request->baseDirectory . 'common/install?state=0&error=table_insert');
         }
 
@@ -268,7 +268,7 @@ class CommonController extends AdminController
 
         // ユーザーとブログの新規登録処理
         $errors = [];
-        $errors['user'] = $users_model->registerValidate($request->get('user'), $user_data, array('login_id', 'password'));
+        $errors['user'] = $users_model->registerValidate($request, $request->get('user'), $user_data, array('login_id', 'password'));
         $errors['blog'] = $blogs_model->validate($request->get('blog'), $blog_data, array('id', 'name', 'nickname'));
         if (empty($errors['user']) && empty($errors['blog'])) {
           $user_data['type'] = Config::get('USER.TYPE.ADMIN');
@@ -280,7 +280,7 @@ class CommonController extends AdminController
             $users_model->updateById($user_data, $user_id);
 
             // 成功したので完了画面へリダイレクト
-            $this->setInfoMessage(__('User registration is completed'));
+            $this->setInfoMessage($request, __('User registration is completed'));
             $this->redirect($request, $request->baseDirectory . 'common/install?state=3'); // 成功終了
 
           } else {
@@ -288,12 +288,12 @@ class CommonController extends AdminController
             $users_model->deleteById($blog_data['user_id']);
 
           }
-          $this->setErrorMessage(__('I failed to register'));
+          $this->setErrorMessage($request, __('I failed to register'));
           return 'admin/common/install_user.twig';
         }
 
         // エラー情報の設定
-        $this->setErrorMessage(__('Input error exists'));
+        $this->setErrorMessage($request, __('Input error exists'));
         $this->set('errors', $errors);
 
         return 'admin/common/install_user.twig'; // 失敗描画

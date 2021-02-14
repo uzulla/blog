@@ -9,16 +9,9 @@ use Fc2blog\Config;
 
 class Session
 {
-
-  private static $isStart = false;
-
-  private function __construct()
-  {
-  }
-
   public static function start()
   {
-    if (self::$isStart) {
+    if (session_status() === PHP_SESSION_ACTIVE) {
       return;
     }
     if (headers_sent()) {
@@ -40,35 +33,37 @@ class Session
     session_set_cookie_params($session_cookie_options);
     session_name(Config::get('SESSION_NAME'));
     session_start();
-    self::$isStart = true;
   }
 
   /**
    * セッションから情報を取得する
+   * @param Request $request
    * @param $key
    * @param null $default
    * @return mixed|null
    */
-  public static function get($key, $default = null)
+  public static function get(Request $request, $key, $default = null)
   {
     self::start();
-    if (isset($_SESSION[$key])) {
-      return $_SESSION[$key];
+    if (isset($request->session[$key])) {
+      return $request->session[$key];
     }
     return $default;
   }
 
   /**
    * セッションから情報を取得し破棄する
+   * @param Request $request
    * @param $key
    * @param null $default
    * @return mixed|null
    */
-  public static function remove($key, $default = null)
+  public static function remove(Request $request, $key, $default = null)
   {
     self::start();
-    if (isset($_SESSION[$key])) {
-      $default = $_SESSION[$key];
+    if (isset($request->session[$key])) {
+      $default = $request->session[$key];
+      unset($request->session[$key]);
       unset($_SESSION[$key]);
     }
     return $default;
@@ -76,12 +71,14 @@ class Session
 
   /**
    * セッションに情報を保存する
+   * @param Request $request
    * @param $key
    * @param $value
    */
-  public static function set($key, $value)
+  public static function set(Request $request, $key, $value)
   {
     self::start();
+    $request->session[$key] = $value;
     $_SESSION[$key] = $value;
   }
 

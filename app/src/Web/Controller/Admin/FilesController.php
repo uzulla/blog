@@ -84,7 +84,7 @@ class FilesController extends AdminController
   {
     $files_model = new FilesModel();
     $blog_id = $this->getBlogId($request);
-    $request->generateNewSig();
+    $request->generateNewSig($request);
 
     $this->set('file_max_size', Config::get('FILE.MAX_SIZE'));
     $this->set('page_limit_file', App::getPageLimit($request, 'FILE'));
@@ -109,13 +109,13 @@ class FilesController extends AdminController
             move_uploaded_file($tmp_name, $move_file_path);
           }
 
-          $this->setInfoMessage(__('I have completed the upload of files'));
+          $this->setInfoMessage($request, __('I have completed the upload of files'));
           $this->redirect($request, array('action' => 'upload')); // アップロード成功
         }
       }
 
       // エラー情報の設定
-      $this->setErrorMessage(__('Input error exists'));
+      $this->setErrorMessage($request, __('Input error exists'));
       $this->set('errors', $errors);
       return 'admin/files/upload.twig';
     }
@@ -203,7 +203,7 @@ class FilesController extends AdminController
       if (!empty($back_url)) {
         $request->set('back_url', $back_url);    // 戻る用のURL
       }
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       return 'admin/files/edit.twig';
     }
 
@@ -232,7 +232,7 @@ class FilesController extends AdminController
           }
         }
 
-        $this->setInfoMessage(__('I have updated the file'));
+        $this->setInfoMessage($request, __('I have updated the file'));
         $back_url = $request->get('back_url');
         if (!empty($back_url)) {
           $this->redirect($request, $back_url);
@@ -242,7 +242,7 @@ class FilesController extends AdminController
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
 
     $back_url = $request->get('back_url');
@@ -258,12 +258,12 @@ class FilesController extends AdminController
    */
   public function delete(Request $request)
   {
-    if (Session::get('sig') && Session::get('sig') === $request->get('sig')) {
+    if (Session::get($request, 'sig') && Session::get($request, 'sig') === $request->get('sig')) {
       // 削除処理
       if (Model::load('Files')->deleteByIdsAndBlogId($request->get('id'), $this->getBlogId($request))) {
-        $this->setInfoMessage(__('I removed the file'));
+        $this->setInfoMessage($request, __('I removed the file'));
       } else {
-        $this->setErrorMessage(__('I failed to remove'));
+        $this->setErrorMessage($request, __('I failed to remove'));
       }
     }
 

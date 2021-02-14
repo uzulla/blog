@@ -5,6 +5,7 @@ namespace Fc2blog\Model;
 use Fc2blog\App;
 use Fc2blog\Config;
 use Fc2blog\Util\PhpCodeLinter;
+use Fc2blog\Web\Request;
 use Fc2blog\Web\Session;
 
 class BlogTemplatesModel extends Model
@@ -36,8 +37,8 @@ class BlogTemplatesModel extends Model
 
   /**
    * バリデート処理
-   * @param $data
-   * @param $valid_data
+   * @param array $data
+   * @param array|null $valid_data
    * @param array $white_list
    * @return array
    */
@@ -69,7 +70,8 @@ class BlogTemplatesModel extends Model
 
   /**
    * FC2テンプレートの構文チェック
-   * @param $php_code
+   * @param Request $request
+   * @param string $php_code
    * @return bool|string
    */
   public static function fc2TemplateSyntax(string $php_code)
@@ -78,7 +80,7 @@ class BlogTemplatesModel extends Model
       // テンプレート検証用にテンポラリディレクトリが必要だが、テストやCLIでSessionを汚染したくないので
       $blog_id = "unitTestOrCliExecute";
     } else {
-      $blog_id = Session::get('blog_id');
+      $blog_id = Session::get($request, 'blog_id');
     }
 
     // フォルダが存在しない場合作成

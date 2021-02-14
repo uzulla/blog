@@ -3,6 +3,7 @@
 namespace Fc2blog\Model;
 
 use Fc2blog\Config;
+use Fc2blog\Web\Request;
 use Fc2blog\Web\Session;
 
 class UsersModel extends Model
@@ -27,9 +28,10 @@ class UsersModel extends Model
 
   /**
    * バリデートを設定
+   * @param Request $request
    * @param $white_list
    */
-  private function setValidate($white_list)
+  private function setValidate(Request $request, $white_list)
   {
     $this->validates = array(
       'login_id' => array(
@@ -46,22 +48,23 @@ class UsersModel extends Model
     );
     if (in_array('login_blog_id', $white_list)) {
       $this->validates['login_blog_id'] = array(
-        'in_array' => array('values'=>array_keys(Model::load('Blogs')->getListByUserId(Session::get('user_id')))),
+        'in_array' => array('values'=>array_keys(Model::load('Blogs')->getListByUserId(Session::get($request, $request, 'user_id')))),
       );
     }
   }
 
   /**
    * 登録用のバリデート処理
-   * @param $data
-   * @param $valid_data
+   * @param Request $request
+   * @param array $data
+   * @param array|null $valid_data
    * @param array $white_list
    * @return array
    */
-  public function registerValidate(array $data, ?array &$valid_data=[], $white_list=[])
+  public function registerValidate(Request $request, array $data, ?array &$valid_data=[], $white_list=[])
   {
     // Validateの設定
-    $this->setValidate($white_list);
+    $this->setValidate($request, $white_list);
 
     // Validateの追加設定
     $this->validates['login_id']['unique'] = array();   // ユニークチェックを追加
@@ -78,15 +81,16 @@ class UsersModel extends Model
 
   /**
    * 更新用のバリデート
-   * @param $data
-   * @param $valid_data
+   * @param Request $request
+   * @param array $data
+   * @param array|null $valid_data
    * @param array $white_list
    * @return array
    */
-  public function updateValidate(array $data, ?array &$valid_data=[], $white_list=[])
+  public function updateValidate(Request $request, array $data, ?array &$valid_data=[], $white_list=[])
   {
     // Validateの設定
-    $this->setValidate($white_list);
+    $this->setValidate($request, $white_list);
 
     // Validateの追加設定
     if (isset($data['password']) && $data['password']=='') {
@@ -111,15 +115,16 @@ class UsersModel extends Model
 
   /**
    * ログイン用のバリデート処理
-   * @param $data
-   * @param $valid_data
+   * @param Request $request
+   * @param array $data
+   * @param array|null $valid_data
    * @param array $white_list
    * @return array
    */
-  public function loginValidate(array $data, ?array &$valid_data=[], $white_list=[])
+  public function loginValidate(Request $request, array $data, ?array &$valid_data=[], $white_list=[])
   {
     // Validateの設定
-    $this->setValidate($white_list);
+    $this->setValidate($request, $white_list);
 
     return $this->validate($data, $valid_data, $white_list);
   }

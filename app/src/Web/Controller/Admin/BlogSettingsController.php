@@ -76,7 +76,7 @@ class BlogSettingsController extends AdminController
 
     // 初期表示時に編集データの取得&設定
     if (!$request->get('blog_setting') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       $blog_setting = $blog_settings_model->findByBlogId($blog_id);
       $request->set('blog_setting', $blog_setting);
       return $this->get('template_path');
@@ -99,13 +99,13 @@ class BlogSettingsController extends AdminController
       // ブログの設定情報更新処理
       if ($blog_settings_model->updateByBlogId($blog_setting_data, $blog_id)) {
         // 一覧ページへ遷移
-        $this->setInfoMessage(__("I have updated the configuration information of the blog"));
+        $this->setInfoMessage($request, __("I have updated the configuration information of the blog"));
         $this->redirect($request, ['action' => $action]);
       }
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
 
     return $this->get('template_path');

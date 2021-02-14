@@ -74,7 +74,7 @@ class CommonController extends UserController
         throw new RuntimeException("random_int thrown exception {$e->getMessage()}");
       }
     }
-    $this->setToken($key);    // トークン設定
+    $this->setToken($request, $key);    // トークン設定
     // captchaの日本語モード判定
     // Cookieでlangがja以外は英語モード
     // Cookieに指定がなければ、Accept Languageヘッダーを参照し、一番がjaでなければ英語モード

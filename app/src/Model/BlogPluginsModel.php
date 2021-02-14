@@ -5,6 +5,7 @@ namespace Fc2blog\Model;
 use Fc2blog\App;
 use Fc2blog\Config;
 use Fc2blog\Util\PhpCodeLinter;
+use Fc2blog\Web\Request;
 use Fc2blog\Web\Session;
 
 class BlogPluginsModel extends Model
@@ -148,13 +149,14 @@ class BlogPluginsModel extends Model
 
   /**
    * FC2テンプレートの構文チェック
+   * @param Request $request
    * @param string $php_code
    * @return string|true
    */
-  public static function fc2PluginSyntax(string $php_code)
+  public static function fc2PluginSyntax(Request $request, string $php_code)
   {
     // フォルダが存在しない場合作成
-    $plugin_path = Config::get('BLOG_TEMPLATE_DIR') . App::getBlogLayer(Session::get('blog_id')) . '/plugins/syntax.php';
+    $plugin_path = Config::get('BLOG_TEMPLATE_DIR') . App::getBlogLayer(Session::get($request, $request, 'blog_id')) . '/plugins/syntax.php';
     $plugin_dir = dirname($plugin_path);
     if (!file_exists($plugin_dir)) {
       mkdir($plugin_dir, 0777, true);

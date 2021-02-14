@@ -62,7 +62,7 @@ class EntriesController extends UserController
 
     // 非公開モードの場合はパスワード認証画面へ遷移
     if ($blog['open_status'] == Config::get('BLOG.OPEN_STATUS.PRIVATE')
-      && !Session::get($this->getBlogPasswordKey($blog['id']))
+      && !Session::get($request, $this->getBlogPasswordKey($blog['id']))
       && $request->methodName != 'blog_password'
       && !$self_blog
     ) {
@@ -260,7 +260,7 @@ class EntriesController extends UserController
     $blog_id = $this->getBlogId($request);
 
     // 投稿者のブログIDチェック
-    if ($blog_id != $this->getAdminBlogId() && !Model::load('Blogs')->isUserHaveBlogId($this->getAdminUserId(), $blog_id)) {
+    if ($blog_id != $this->getAdminBlogId($request) && !Model::load('Blogs')->isUserHaveBlogId($this->getAdminUserId($request), $blog_id)) {
       return $this->error404();
     }
 
@@ -316,7 +316,7 @@ class EntriesController extends UserController
     $css = $template['css'];
 
     // テンプレートのシンタックスチェック
-    $syntax = BlogTemplatesModel::fc2TemplateSyntax($html);
+    $syntax = BlogTemplatesModel::fc2TemplateSyntax($request, $html);
     if ($syntax !== true) {
       return 'user/entries/syntax_error.twig';
     }
@@ -349,7 +349,7 @@ class EntriesController extends UserController
     $this->setEntriesData($request, $options, $pages);
 
     // テンプレートのシンタックスチェック
-    $syntax = BlogTemplatesModel::fc2TemplateSyntax($html);
+    $syntax = BlogTemplatesModel::fc2TemplateSyntax($request, $html);
     if ($syntax !== true) {
       throw new InvalidArgumentException("Syntax error in the generated template.");
     }
@@ -385,7 +385,7 @@ class EntriesController extends UserController
     }
 
     // テンプレートのシンタックスチェック
-    $syntax = BlogTemplatesModel::fc2TemplateSyntax($html);
+    $syntax = BlogTemplatesModel::fc2TemplateSyntax($request, $html);
     if ($syntax !== true) {
       return 'user/entries/syntax_error.twig';
     }
@@ -418,7 +418,7 @@ class EntriesController extends UserController
     $contents = $preview_plugin['contents'];
 
     // テンプレートのシンタックスチェック
-    $syntax = BlogPluginsModel::fc2PluginSyntax($contents);
+    $syntax = BlogPluginsModel::fc2PluginSyntax($request, $contents);
     if ($syntax !== true) {
       return 'user/entries/syntax_error.twig';
     }
@@ -648,7 +648,7 @@ class EntriesController extends UserController
   {
     return (
       $this->isLoginBlog($request) || // 管理者であるか
-      Session::get($this->getEntryPasswordKey($entry['blog_id'], $entry['id']), false) // パスワードアクセスで許可されているか
+      Session::get($request, $this->getEntryPasswordKey($entry['blog_id'], $entry['id']), false) // パスワードアクセスで許可されているか
     );
   }
 
@@ -707,7 +707,7 @@ class EntriesController extends UserController
     }
     if ($entry['password'] === $request->get('password', '')) {
       // パスワードが合致すればセッションに記録
-      Session::set($this->getEntryPasswordKey($entry['blog_id'], $entry['id']), true);
+      Session::set($request, $this->getEntryPasswordKey($entry['blog_id'], $entry['id']), true);
     }
 
     $this->redirect($request, array('action' => 'view', 'blog_id' => $blog_id, 'id' => $id));
@@ -724,14 +724,14 @@ class EntriesController extends UserController
     $blog = $this->getBlog($blog_id);
 
     // プライベートブログではない、あるいは認証済み、ログイン済みならリダイレクト
-    if ($blog['open_status'] != Config::get('BLOG.OPEN_STATUS.PRIVATE') || Session::get($this->getBlogPasswordKey($blog['id'])) || $this->isLoginBlog($request)) {
+    if ($blog['open_status'] != Config::get('BLOG.OPEN_STATUS.PRIVATE') || Session::get($request, $this->getBlogPasswordKey($blog['id'])) || $this->isLoginBlog($request)) {
       $this->redirect($request, ['action' => 'index', 'blog_id' => $blog_id]);
     }
 
     // 認証処理
     if ($request->get('blog')) {
       if (password_verify($request->get('blog.password'), $blog['blog_password'])) {
-        Session::set($this->getBlogPasswordKey($blog['id']), true);
+        Session::set($request, $this->getBlogPasswordKey($blog['id']), true);
         $this->set('auth_success', true); // for testing.
         $this->redirect($request, ['action' => 'index', 'blog_id' => $blog_id]);
       }

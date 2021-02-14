@@ -35,14 +35,14 @@ class CategoriesController extends AdminController
     $this->set('is_limit_create_category', $is_limit_create_category);
 
     if ($is_limit_create_category) {
-      $this->setErrorMessage(__('Exceeded the maximum number of registered category'));
+      $this->setErrorMessage($request, __('Exceeded the maximum number of registered category'));
       $request->set('category', null);
       return "admin/categories/create.twig";
     }
 
     // 初期表示時
     if (!$request->get('category') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       return "admin/categories/create.twig";
     }
 
@@ -53,13 +53,13 @@ class CategoriesController extends AdminController
     if (empty($errors)) {
       $data['blog_id'] = $blog_id;
       if ($id = $categories_model->addNode($data, 'blog_id=?', [$blog_id])) {
-        $this->setInfoMessage(__('I added a category'));
+        $this->setInfoMessage($request, __('I added a category'));
         $this->redirect($request, ['action' => 'create']);
       }
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
 
     return "admin/categories/create.twig";
@@ -83,7 +83,7 @@ class CategoriesController extends AdminController
     $this->set('categories_model_order_list', $categories_model::getOrderList());
 
     // 初期表示時に編集データの取得&設定
-    if (!$request->get('category') || !Session::get('sig') || Session::get('sig') !== $request->get('sig')) {
+    if (!$request->get('category') || !Session::get($request, 'sig') || Session::get($request, 'sig') !== $request->get('sig')) {
       if (!$category = $categories_model->findByIdAndBlogId($id, $blog_id)) {
         $this->redirect($request, ['action' => 'create']);
       }
@@ -98,13 +98,13 @@ class CategoriesController extends AdminController
     $errors = $categories_model->validate($category_request, $data, ['parent_id', 'name', 'category_order']);
     if (empty($errors)) {
       if ($categories_model->updateNodeById($data, $id, 'blog_id=?', [$blog_id])) {
-        $this->setInfoMessage(__('I have updated the category'));
+        $this->setInfoMessage($request, __('I have updated the category'));
         $this->redirect($request, ['action' => 'create']);
       }
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
     return "admin/categories/edit.twig";
   }
@@ -120,7 +120,7 @@ class CategoriesController extends AdminController
     $id = $request->get('id');
     $blog_id = $this->getBlogId($request);
 
-    if (!Session::get('sig') || Session::get('sig') !== $request->get('sig')) {
+    if (!Session::get($request, 'sig') || Session::get($request, 'sig') !== $request->get('sig')) {
       $request = new Request();
       $this->redirect($request, array('action' => 'create'));
       return;
@@ -133,7 +133,7 @@ class CategoriesController extends AdminController
 
     // 削除処理
     $categories_model->deleteNodeByIdAndBlogId($id, $blog_id);
-    $this->setInfoMessage(__('I removed the category'));
+    $this->setInfoMessage($request, __('I removed the category'));
     $this->redirect($request, array('action' => 'create'));
   }
 

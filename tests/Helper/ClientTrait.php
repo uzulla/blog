@@ -214,12 +214,12 @@ trait ClientTrait
     return $this->clientTraitSession['sig'];
   }
 
-  public function getFlashMessages(): array
+  public function getFlashMessages(Request $request): array
   {
     $rtn = [
-      'error' => implode(",", Session::remove('flash-message-error') ?? []),
-      'info' => implode(",", Session::remove('flash-message-info') ?? []),
-      'warn' => implode(",", Session::remove('flash-message-warn') ?? []),
+      'error' => implode(",", Session::remove($request, 'flash-message-error') ?? []),
+      'info' => implode(",", Session::remove($request, 'flash-message-info') ?? []),
+      'warn' => implode(",", Session::remove($request, 'flash-message-warn') ?? []),
     ];
     $rtn['is_something'] = (strlen($rtn['error']) > 0) || (strlen($rtn['info']) > 0) || (strlen($rtn['warn']) > 0);
     $rtn['is_info'] = strlen($rtn['info']) > 0;

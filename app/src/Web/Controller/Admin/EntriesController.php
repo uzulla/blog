@@ -83,7 +83,7 @@ class EntriesController extends AdminController
         break;
     }
 
-    $request->generateNewSig();
+    $request->generateNewSig($request);
 
     // オプション設定
     $options = [
@@ -154,7 +154,7 @@ class EntriesController extends AdminController
 
     // 初期表示時
     if (!$request->get('entry') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       return "admin/entries/create.twig";
     }
 
@@ -171,13 +171,13 @@ class EntriesController extends AdminController
         // タグと紐付
         $entry_tags_model->save($blog_id, $id, $request->get('entry_tags'));
         // 一覧ページへ遷移
-        $this->setInfoMessage(__('I created a entry'));
+        $this->setInfoMessage($request, __('I created a entry'));
         $this->redirect($request, array('action' => 'index')); // 保存成功
       }
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
     return "admin/entries/create.twig";
   }
@@ -205,7 +205,7 @@ class EntriesController extends AdminController
 
     // 編集画面の表示
     if (!$request->get('entry') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
 
       // data load
       $request->set('entry', $entry);
@@ -250,13 +250,13 @@ class EntriesController extends AdminController
         // タグと紐付
         $entry_tags_model->save($blog_id, $id, $request->get('entry_tags'));
         // 一覧ページへ遷移
-        $this->setInfoMessage(__('I have updated the entry'));
+        $this->setInfoMessage($request, __('I have updated the entry'));
         $this->redirect($request, ['action' => 'index']);
       }
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
     return "admin/entries/exit.twig";
   }
@@ -267,10 +267,10 @@ class EntriesController extends AdminController
    */
   public function delete(Request $request)
   {
-    if (Session::get('sig') && Session::get('sig') === $request->get('sig')) {
+    if (Session::get($request, 'sig') && Session::get($request, 'sig') === $request->get('sig')) {
       // 削除処理
       if (Model::load('Entries')->deleteByIdsAndBlogId($request->get('id'), $this->getBlogId($request)))
-        $this->setInfoMessage(__('I removed the entry'));
+        $this->setInfoMessage($request, __('I removed the entry'));
     }
     $this->redirect($request, array('action' => 'index'));
   }

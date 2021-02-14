@@ -20,7 +20,7 @@ class TagsController extends AdminController
   {
     $tags_model = new TagsModel();
     $blog_id = $this->getBlogId($request);
-    $request->generateNewSig();
+    $request->generateNewSig($request);
 
     $this->set('tag_limit_list', Config::get('TAG.LIMIT_LIST'));
     $this->set('tag_default_limit', Config::get('TAG.DEFAULT_LIMIT'));
@@ -109,7 +109,7 @@ class TagsController extends AdminController
     $errors['tag'] = $tags_model->validate($tag_request, $data, ['name']);
     if (empty($errors['tag'])) {
       if ($tags_model->updateByIdAndBlogId($data, $id, $blog_id)) {
-        $this->setInfoMessage(__('I have updated the tag'));
+        $this->setInfoMessage($request, __('I have updated the tag'));
 
         // 元の画面へ戻る
         $back_url = $request->get('back_url');
@@ -121,7 +121,7 @@ class TagsController extends AdminController
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
 
     return 'admin/tags/edit.twig';
@@ -133,12 +133,12 @@ class TagsController extends AdminController
    */
   public function delete(Request $request)
   {
-    if (Session::get('sig') && Session::get('sig') === $request->get('sig')) {
+    if (Session::get($request, 'sig') && Session::get($request, 'sig') === $request->get('sig')) {
       // 削除処理
       if (Model::load('Tags')->deleteByIdsAndBlogId($request->get('id'), $this->getBlogId($request))) {
-        $this->setInfoMessage(__('I removed the tag'));
+        $this->setInfoMessage($request, __('I removed the tag'));
       } else {
-        $this->setErrorMessage(__('I failed to remove'));
+        $this->setErrorMessage($request, __('I failed to remove'));
       }
     }
 

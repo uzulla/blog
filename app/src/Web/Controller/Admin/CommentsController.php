@@ -151,7 +151,7 @@ class CommentsController extends AdminController
 
     // 承認処理
     $comments_model->updateApproval($blog_id, $id);
-    $this->setInfoMessage(__('I approved a comment'));
+    $this->setInfoMessage($request, __('I approved a comment'));
 
     // 元の画面へ戻る
     $back_url = $request->get('back_url');
@@ -235,7 +235,7 @@ class CommentsController extends AdminController
     $errors['comment'] = $comments_model->replyValidate($request->get('comment'), $data, array('reply_body'));
     if (empty($errors['comment'])) {
       if ($comments_model->updateReply($data, $comment)) {
-        $this->setInfoMessage(__('I did reply to comment '));
+        $this->setInfoMessage($request, __('I did reply to comment '));
 
         // 元の画面へ戻る
         $back_url = $request->get('back_url');
@@ -247,7 +247,7 @@ class CommentsController extends AdminController
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
 
     return 'admin/comments/reply.twig';
@@ -309,9 +309,9 @@ class CommentsController extends AdminController
   {
     // 削除処理
     if (Model::load('Comments')->deleteByIdsAndBlogId($request->get('id'), $this->getBlogId($request))) {
-      $this->setInfoMessage(__('I removed the comment'));
+      $this->setInfoMessage($request, __('I removed the comment'));
     } else {
-      $this->setErrorMessage(__('I failed to remove'));
+      $this->setErrorMessage($request, __('I failed to remove'));
     }
 
     // 元の画面へ戻る

@@ -19,12 +19,12 @@ class BlogsController extends AdminController
    */
   public function index(Request $request): string
   {
-    $request->generateNewSig();
+    $request->generateNewSig($request);
 
     // ブログの一覧取得
     $options = [
       'where' => 'user_id=?',
-      'params' => [$this->getUserId()],
+      'params' => [$this->getUserId($request)],
       'limit' => Config::get('BLOG.DEFAULT_LIMIT', 10),
       'page' => $request->get('page', 0, Request::VALID_UNSIGNED_INT),
       'order' => 'created_at DESC',
@@ -52,7 +52,7 @@ class BlogsController extends AdminController
   {
     // 初期表示時
     if (!$request->get('blog') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       return 'admin/blogs/create.twig';
     }
 
@@ -62,16 +62,16 @@ class BlogsController extends AdminController
     $errors = [];
     $errors['blog'] = $blogs_model->validate($request->get('blog'), $blog_data, ['id', 'name', 'nickname']);
     if (empty($errors['blog'])) {
-      $blog_data['user_id'] = $this->getUserId();
+      $blog_data['user_id'] = $this->getUserId($request);
       $blog_data['trip_salt'] = Base62Proxy::encode(random_bytes(128));
       if ($id = $blogs_model->insert($blog_data)) {
-        $this->setInfoMessage(__('I created a blog'));
+        $this->setInfoMessage($request, __('I created a blog'));
         $this->redirect($request, ['action' => 'index']);
       }
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
     return 'admin/blogs/create.twig';
   }
@@ -94,7 +94,7 @@ class BlogsController extends AdminController
 
     // 初期表示時に編集データの設定
     if (!$request->get('blog') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       if (!$blog = $blogs_model->findById($blog_id)) {
         $this->redirect($request, ['action' => 'index']);
       }
@@ -118,14 +118,14 @@ class BlogsController extends AdminController
         $blog_data['blog_password'] = ($blogs_model->findById($blog_id))['blog_password'];
       }
       if ($blogs_model->updateById($blog_data, $blog_id)) {
-        $this->setBlog(['id' => $blog_id, 'nickname' => $blog_data['nickname']]); // ニックネームの更新
-        $this->setInfoMessage(__('I updated a blog'));
+        $this->setBlog($request, ['id' => $blog_id, 'nickname' => $blog_data['nickname']]); // ニックネームの更新
+        $this->setInfoMessage($request, __('I updated a blog'));
         $this->redirect($request, ['action' => 'edit']);
       }
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
 
     return "admin/blogs/edit.twig";
@@ -140,7 +140,7 @@ class BlogsController extends AdminController
     $blog_id = $request->get('blog_id');
 
     // 切り替え先のブログの存在チェック
-    $blog = Model::load('Blogs')->findByIdAndUserId($blog_id, $this->getUserId());
+    $blog = Model::load('Blogs')->findByIdAndUserId($blog_id, $this->getUserId($request));
     if (!empty($blog)) {
       $this->setBlog($blog);
     }
@@ -157,24 +157,24 @@ class BlogsController extends AdminController
     $this->set('tab', 'blog_delete');
     // 退会チェック
     if (!$request->get('blog.delete') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       return 'admin/blogs/delete.twig';
     }
 
     $blog_id = $this->getBlogId($request);
-    $user_id = $this->getUserId();
+    $user_id = $this->getUserId($request);
 
     // 削除するブログが存在するか？
     $blogs_model = Model::load('Blogs');
     if (!$blog = $blogs_model->findByIdAndUserId($blog_id, $user_id)) {
-      $this->setErrorMessage(__('I failed to remove'));
+      $this->setErrorMessage($request, __('I failed to remove'));
       $this->redirect($request, ['action' => 'index']);
     }
 
     // 削除処理
     $blogs_model->deleteByIdAndUserId($blog_id, $user_id);
     $this->setBlog(null); // ログイン中のブログを削除したのでブログの選択中状態を外す
-    $this->setInfoMessage(__('I removed the blog'));
+    $this->setInfoMessage($request, __('I removed the blog'));
     $this->redirect($request, ['action' => 'index']);
     return 'admin/blogs/delete.twig'; // 到達しないはずである
   }

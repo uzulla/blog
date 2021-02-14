@@ -252,7 +252,7 @@ class HtmlHelper extends AbstractExtension
                       <a href="<?php echo Html::url($request, array('action' => 'edit', 'id' => $category['id'])); ?>"><?php echo h($category['name']); ?>
                           (<?php echo $category['count']; ?>)</a>
                     <?php if ($category['id'] != 1) : ?>
-                        <a href="<?php echo Html::url($request, array('action' => 'delete', 'id' => $category['id'], 'sig' => Session::get('sig'))); ?>"
+                        <a href="<?php echo Html::url($request, array('action' => 'delete', 'id' => $category['id'], 'sig' => Session::get($request, $request, 'sig'))); ?>"
                            onclick="return confirm('<?php echo __('If the child category exists\nRemove all along with the child category, but do you really want?'); ?>');"><?php echo __('Delete'); ?></a>
                     <?php endif; ?>
                   </li>

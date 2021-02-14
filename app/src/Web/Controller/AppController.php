@@ -35,17 +35,18 @@ abstract class AppController extends Controller
 
   /**
    * token発行
+   * @param Request $request
    * @param null $key
    * @param string $name
    * TODO captchaでしかつかっていないので、名前をかえるべき
    */
-  protected function setToken($key = null, $name = 'token'): void
+  protected function setToken(Request $request, $key = null, $name = 'token'): void
   {
     if ($key === null) {
       // 適当な値をトークンに設定
       $key = App::genRandomStringAlphaNum(32);
     }
-    Session::set($name, $key);
+    Session::set($request, $name, $key);
   }
 
   /**
@@ -59,6 +60,6 @@ abstract class AppController extends Controller
   {
     $value = $request->get($name, '');
     $value = mb_convert_kana($value, 'n');
-    return Session::remove($name) == $value ? null : __('Token authentication is invalid');
+    return Session::remove($request, $name) == $value ? null : __('Token authentication is invalid');
   }
 }

@@ -406,11 +406,11 @@ class Request
     return $this->session['sig'] === $this->get('sig');
   }
 
-  public function generateNewSig():void
+  public function generateNewSig(Request $request):void
   {
     $sig = App::genRandomString();
     $this->session['sig'] = $sig;
-    Session::set('sig', $sig);
+    Session::set($request, 'sig', $sig);
   }
 
   /**

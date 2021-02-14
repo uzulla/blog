@@ -22,18 +22,22 @@ abstract class UserController extends AppController
 
   /**
    * 管理画面ログイン中のブログIDを取得する
+   * @param Request $request
+   * @return string|null
    */
-  protected static function getAdminBlogId(): ?string
+  protected static function getAdminBlogId(Request $request): ?string
   {
-    return Session::get('blog_id');
+    return Session::get($request, 'blog_id');
   }
 
   /**
    * 管理画面ログイン中のUserIDを取得する
+   * @param Request $request
+   * @return mixed|null
    */
-  protected static function getAdminUserId()
+  protected static function getAdminUserId(Request $request)
   {
-    return Session::get('user_id');
+    return Session::get($request, 'user_id');
   }
 
   /**
@@ -44,7 +48,7 @@ abstract class UserController extends AppController
   protected function isLoginBlog(Request $request) :bool
   {
     // ログイン中か
-    $admin_blog_id = $this->getAdminBlogId();
+    $admin_blog_id = $this->getAdminBlogId($request);
     if (empty($admin_blog_id)) {
       return false;
     }

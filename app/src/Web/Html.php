@@ -170,7 +170,7 @@ class Html
         break;
 
       case 'token':
-        $html = '<input type="hidden" ' . $attr . ' value="' . h(Session::get($name)) . '" />';
+        $html = '<input type="hidden" ' . $attr . ' value="' . h(Session::get($request, $name)) . '" />';
         break;
 
       case 'captcha':

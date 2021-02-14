@@ -219,17 +219,17 @@ abstract class Controller
       $blogs_model = new BlogsModel();
       $data = [
         'req' => $request,
-        'sig' => Session::get('sig'),
+        'sig' => Session::get($request, 'sig'),
         'lang' => $request->lang,
         'debug' => Config::get('APP_DEBUG') != 0,
         'preview_active_blog_url' => App::userURL($request, ['controller' => 'entries', 'action' => 'index', 'blog_id' => $this->getBlogId($request)]), // 代用できそう
         'is_register_able' => (Config::get('USER.REGIST_SETTING.FREE') == Config::get('USER.REGIST_STATUS')), // TODO 意図する解釈確認
         'active_menu' => App::getActiveMenu($request),
-        'isLogin' => $this->isLogin(),
-        'nick_name' => $this->getNickName(),
-        'blog_list' => $blogs_model->getSelectList($this->getUserId()),
-        'is_selected_blog' => $this->isSelectedBlog(),
-        'flash_messages' => $this->removeMessage(),
+        'isLogin' => $this->isLogin($request),
+        'nick_name' => $this->getNickName($request),
+        'blog_list' => $blogs_model->getSelectList($this->getUserId($request)),
+        'is_selected_blog' => $this->isSelectedBlog($request),
+        'flash_messages' => $this->removeMessage($request),
         'js_common' => [
           'isURLRewrite' => $request->urlRewrite,
           'baseDirectory' => $request->baseDirectory,

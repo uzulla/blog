@@ -19,7 +19,7 @@ class UsersController extends AdminController
    */
   public function index(Request $request)
   {
-    if (!$this->isAdmin()) {
+    if (!$this->isAdmin($request)) {
       return $this->error404();
     }
 
@@ -60,23 +60,23 @@ class UsersController extends AdminController
 
     // ユーザーとブログの新規登録処理
     $errors = array();
-    $errors['user'] = $users_model->registerValidate($request->get('user'), $user_data, array('login_id', 'password'));
+    $errors['user'] = $users_model->registerValidate($request, $request->get('user'), $user_data, array('login_id', 'password'));
     $errors['blog'] = $blogs_model->validate($request->get('blog'), $blog_data, array('id', 'name', 'nickname'));
     if (empty($errors['user']) && empty($errors['blog'])) {
       $blog_data['user_id'] = $users_model->insert($user_data);
       if ($blog_data['user_id'] && $blog_id = $blogs_model->insert($blog_data)) {
-        $this->setInfoMessage(__('User registration is completed'));
+        $this->setInfoMessage($request, __('User registration is completed'));
         $this->redirect($request, array('action' => 'login'));
       } else {
         // ブログ作成失敗時には登録したユーザーを削除
         $users_model->deleteById($blog_data['user_id']);
       }
-      $this->setErrorMessage(__('I failed to register'));
+      $this->setErrorMessage($request, __('I failed to register'));
       return;
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
   }
 
@@ -88,12 +88,12 @@ class UsersController extends AdminController
   public function edit(Request $request): string
   {
     $users_model = new UsersModel();
-    $user_id = $this->getUserId();
+    $user_id = $this->getUserId($request);
     $this->set('tab', 'edit');
 
     // 初期表示時に編集データの取得&設定
     if (!$request->get('user') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       $user = $users_model->findById($user_id);
       unset($user['password']);
       $request->set('user', $user);
@@ -105,16 +105,16 @@ class UsersController extends AdminController
     // 更新処理
     $errors = [];
     $white_list = ['password', 'login_blog_id'];
-    $errors['user'] = $users_model->updateValidate($request->get('user'), $data_user, $white_list);
+    $errors['user'] = $users_model->updateValidate($request, $request->get('user'), $data_user, $white_list);
     if (empty($errors['user'])) {
       if ($users_model->updateById($data_user, $user_id)) {
-        $this->setInfoMessage(__('Update User Information'));
+        $this->setInfoMessage($request, __('Update User Information'));
         $this->redirect($request, ['action' => 'edit']);
       }
     }
 
     // エラー情報の設定
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
 
     return 'admin/users/edit.twig';
@@ -131,13 +131,13 @@ class UsersController extends AdminController
 
     // 退会チェック
     if (!$request->get('user.delete') || !$request->isValidSig()) {
-      $request->generateNewSig();
+      $request->generateNewSig($request);
       return 'admin/users/withdrawal.twig';
     }
 
     // 削除処理
-    Model::load('Users')->deleteById($this->getUserId());
-    $this->setInfoMessage(__('Was completed withdrawal'));
+    Model::load('Users')->deleteById($this->getUserId($request));
+    $this->setInfoMessage($request, __('Was completed withdrawal'));
     $this->logout($request);
     return 'admin/users/withdrawal.twig';
   }
@@ -151,7 +151,7 @@ class UsersController extends AdminController
   {
     $template = 'admin/users/login.twig';
 
-    if ($this->isLogin()) {
+    if ($this->isLogin($request)) {
       $this->redirect($request, $request->baseDirectory);   // トップページへリダイレクト
     }
 
@@ -163,7 +163,7 @@ class UsersController extends AdminController
     $users_model = new UsersModel();
 
     // ログインフォームのバリデート
-    $errors = $users_model->loginValidate($request->get('user'), $data, ['login_id', 'password']);
+    $errors = $users_model->loginValidate($request, $request->get('user'), $data, ['login_id', 'password']);
     if (empty($errors)) {
       $user = $users_model->findByLoginIdAndPassword($data['login_id'], $data['password']);
       if ($user) {
@@ -171,7 +171,7 @@ class UsersController extends AdminController
         $blog = Model::load('Blogs')->getLoginBlog($user);
         $this->loginProcess($user, $blog);
         $users_model->updateById(['logged_at' => date('Y-m-d H:i:s')], $user['id']);
-        if (!$this->isSelectedBlog()) {
+        if (!$this->isSelectedBlog($request)) {
           $this->redirect($request, ['controller' => 'Blogs', 'action' => 'create']);
         }
         $this->redirect($request, $request->baseDirectory);   // トップページへリダイレクト
@@ -179,7 +179,7 @@ class UsersController extends AdminController
       $errors = ['login_id' => __('Login ID or password is incorrect')];
     }
 
-    $this->setErrorMessage(__('Input error exists'));
+    $this->setErrorMessage($request, __('Input error exists'));
     $this->set('errors', $errors);
     return $template;
   }
@@ -190,7 +190,7 @@ class UsersController extends AdminController
    */
   public function logout(Request $request)
   {
-    if ($this->isLogin()) {
+    if ($this->isLogin($request)) {
       Session::destroy($request);
     }
     $this->redirect($request, array('action' => 'login'));

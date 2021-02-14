@@ -28,6 +28,7 @@ class GenerateSampleTemplate
         "title" => $faker->sentence(3),
         "html" => $faker->randomHtml(),
         "css" => "/* this is pseudo css " . $faker->text() . "*/",
+        "blog_id" => $blog_id
       ];
 
       // 新規登録処理

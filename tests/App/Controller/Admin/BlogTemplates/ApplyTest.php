@@ -29,7 +29,8 @@ class ApplyTest extends TestCase
 
   public function testApply(): void
   {
-    Session::destroy(new Request());
+    $request = new Request();
+    Session::destroy($request);
     $this->resetSession();
     $this->resetCookie();
     $this->mergeAdminSession();
@@ -74,7 +75,7 @@ class ApplyTest extends TestCase
     ]);
     $this->assertEquals('/admin/blog_templates/index', $r->redirectUrl);
 
-    $fm = $this->getFlashMessages();
+    $fm = $this->getFlashMessages($request);
     $this->assertFalse($fm['is_error']);
     $this->assertFalse($fm['is_warn']);
     $this->assertTrue($fm['is_info']);
@@ -85,7 +86,7 @@ class ApplyTest extends TestCase
     ]);
     $this->assertEquals('/admin/blog_templates/index', $r->redirectUrl);
 
-    $fm = $this->getFlashMessages();
+    $fm = $this->getFlashMessages($request);
     $this->assertFalse($fm['is_error']);
     $this->assertFalse($fm['is_warn']);
     $this->assertTrue($fm['is_info']);
